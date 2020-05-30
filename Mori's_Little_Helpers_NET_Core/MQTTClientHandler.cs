@@ -7,10 +7,12 @@ using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using Newtonsoft.Json;
+using Schweigm_NETCore_Helpers.Interfaces;
 
 namespace Schweigm_NETCore_Helpers
 {
-    public class MqttClientHandler
+    public class MqttClientHandler<T>
+        where T: class, IMqttSignal
     {
 
         #region Public-Member
@@ -20,7 +22,7 @@ namespace Schweigm_NETCore_Helpers
         /// Object: Signal to Update / String: Topic
         /// </summary>
         // ReSharper disable once CollectionNeverUpdated.Global
-        public List<(object,string)> SignalsToUpdate { get; set; } = new List<(object, string)>();
+        public List<T> SignalsToUpdate { get; set; } = new List<T>();
 
         /// <summary>
         /// Lock to lock the CA_SignalsToUpdate List so no Concurrency Issues occur
@@ -114,9 +116,9 @@ namespace Schweigm_NETCore_Helpers
                 lock (SignalsToUpdateLock)
                 {
 
-                    foreach (var (signalToSend, topic) in SignalsToUpdate)
+                    foreach (var signalToSend in SignalsToUpdate)
                     {
-                        SendCaValue(signalToSend, topic);
+                        SendCaValue(signalToSend);
                     }
 
                     SignalsToUpdate.Clear();
@@ -129,13 +131,13 @@ namespace Schweigm_NETCore_Helpers
         /// </summary>
         /// <param name="signalToSend"></param>
         /// <param name="topic"></param>
-        private void SendCaValue(object signalToSend, string topic)
+        private void SendCaValue(T signalToSend)
         {
             var json = JsonConvert.SerializeObject(signalToSend, Formatting.Indented);
             var msg = Encoding.ASCII.GetBytes(json);
-            _mqttClient.PublishAsync(topic, msg);
+            _mqttClient.PublishAsync(signalToSend.Topic, msg);
 
-            CoolConsoleOutput.Write("MQTT Publish", topic + Environment.NewLine, ConsoleColor.Cyan);
+            CoolConsoleOutput.Write("MQTT Publish", signalToSend.Topic + Environment.NewLine, ConsoleColor.Cyan);
         }
 
         #endregion Private-Functions

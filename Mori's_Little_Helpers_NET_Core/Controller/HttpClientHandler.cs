@@ -8,7 +8,7 @@ using Schweigm_NETCore_Helpers.Interfaces;
 namespace Schweigm_NETCore_Helpers
 {
     public class HttpClientHandler<T>
-        where T: class, IHttpSignalToSend
+        where T: class, IHttpSignal
     {
 
         /// <summary>

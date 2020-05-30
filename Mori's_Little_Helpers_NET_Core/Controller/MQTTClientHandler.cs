@@ -9,7 +9,7 @@ using MQTTnet.Client.Options;
 using Newtonsoft.Json;
 using Schweigm_NETCore_Helpers.Interfaces;
 
-namespace Schweigm_NETCore_Helpers
+namespace Schweigm_NETCore_Helpers.Controller
 {
     public class MqttClientHandler<T>
         where T: class, IMqttSignal
@@ -28,6 +28,8 @@ namespace Schweigm_NETCore_Helpers
         /// Lock to lock the CA_SignalsToUpdate List so no Concurrency Issues occur
         /// </summary>
         public object SignalsToUpdateLock { get; } = new object();
+
+        public bool IsActive { get; private set; }
 
         #endregion Public-Member
 
@@ -65,6 +67,7 @@ namespace Schweigm_NETCore_Helpers
         {
             if(_mqttClient.IsConnected) return;
             _mqttClient.ConnectAsync(_mqttOptions);
+            IsActive = true;
         }
 
         /// <summary>
@@ -74,6 +77,7 @@ namespace Schweigm_NETCore_Helpers
         {
             if (!_mqttClient.IsConnected) return;
             _mqttClient.DisconnectAsync();
+            IsActive = false;
         }
 
         /// <summary>
@@ -130,7 +134,6 @@ namespace Schweigm_NETCore_Helpers
         /// Sends the Numeric Signal to the CA
         /// </summary>
         /// <param name="signalToSend"></param>
-        /// <param name="topic"></param>
         private void SendCaValue(T signalToSend)
         {
             var json = JsonConvert.SerializeObject(signalToSend, Formatting.Indented);

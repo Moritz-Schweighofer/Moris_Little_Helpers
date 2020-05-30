@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Schweigm_NETCore_Helpers.Interfaces;
 
-namespace Schweigm_NETCore_Helpers
+namespace Schweigm_NETCore_Helpers.Controller
 {
     public class HttpClientHandler<T>
         where T: class, IHttpSignal

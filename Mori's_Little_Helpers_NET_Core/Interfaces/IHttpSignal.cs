@@ -6,6 +6,6 @@
         string ValueDataType { get; set; }
         string ValueUnit { get; set; }
         string Timestamp { get; set; }
-        string Topic { get; set; }
+        string Topic { get; }
     }
 }

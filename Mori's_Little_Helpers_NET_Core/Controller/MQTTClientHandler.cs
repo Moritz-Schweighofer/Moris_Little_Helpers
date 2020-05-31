@@ -17,23 +17,24 @@ namespace Schweigm_NETCore_Helpers.Controller
 
         #region Public-Member
 
-        /// <summary>
-        /// List of all CA Signals which shall be updated in the next Send Cycle
-        /// Object: Signal to Update / String: Topic
-        /// </summary>
-        // ReSharper disable once CollectionNeverUpdated.Global
-        public List<T> SignalsToUpdate { get; set; } = new List<T>();
-
-        /// <summary>
-        /// Lock to lock the CA_SignalsToUpdate List so no Concurrency Issues occur
-        /// </summary>
-        public object SignalsToUpdateLock { get; } = new object();
-
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once UnusedAutoPropertyAccessor.Global
         public bool IsActive { get; private set; }
 
         #endregion Public-Member
 
         #region Private-Member
+        /// <summary>
+        /// List of all CA Signals which shall be updated in the next Send Cycle
+        /// Object: Signal to Update / String: Topic
+        /// </summary>
+        // ReSharper disable once CollectionNeverUpdated.Global
+        private List<T> SignalsToUpdate { get; } = new List<T>();
+
+        /// <summary>
+        /// Lock to lock the CA_SignalsToUpdate List so no Concurrency Issues occur
+        /// </summary>
+        private object SignalsToUpdateLock { get; } = new object();
 
         private readonly IMqttClient _mqttClient;
         private readonly IMqttClientOptions _mqttOptions;
@@ -99,6 +100,16 @@ namespace Schweigm_NETCore_Helpers.Controller
         public void StopDataTransmission()
         {
             _updateMqttCancellationTokenSource.Cancel();
+        }
+
+        public void UpdateSignal(T signal)
+        {
+            lock (SignalsToUpdateLock)
+            {
+                var indexSignal = SignalsToUpdate.FindIndex(m => m.ID == signal.ID);
+                if (indexSignal >= 0) SignalsToUpdate[indexSignal] = signal;
+                else SignalsToUpdate.Add(signal);
+            }
         }
 
         #endregion Public-Functions

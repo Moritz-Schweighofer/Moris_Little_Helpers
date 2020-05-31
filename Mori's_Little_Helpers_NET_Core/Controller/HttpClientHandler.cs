@@ -14,12 +14,13 @@ namespace Schweigm_NETCore_Helpers.Controller
         /// <summary>
         /// List of all CA Signals which shall be updated in the next Send Cycle
         /// </summary>
-        public List<T> SignalsToUpdate { get; set; } = new List<T>();
+        private List<T> SignalsToUpdate { get; } = new List<T>();
 
         /// <summary>
         /// Lock to lock the CA_SignalsToUpdate List so no Concurrency Issues occur
         /// </summary>
-        public object CaSignalsToUpdateLock { get; set; } = new object();
+        private object SignalsToUpdateLock { get; } = new object();
+
 
         public string Host
         {
@@ -50,6 +51,8 @@ namespace Schweigm_NETCore_Helpers.Controller
             }
         }
 
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once UnusedAutoPropertyAccessor.Global
         public bool IsActive { get; private set; }
 
         private string _host;
@@ -84,6 +87,16 @@ namespace Schweigm_NETCore_Helpers.Controller
             IsActive = false;
         }
 
+        public void UpdateSignal(T signal)
+        {
+            lock (SignalsToUpdateLock)
+            {
+                var indexSignal = SignalsToUpdate.FindIndex(m => m.ID == signal.ID);
+                if (indexSignal >= 0) SignalsToUpdate[indexSignal] = signal;
+                else SignalsToUpdate.Add(signal);
+            }
+        }
+
         private void UpdateHttpTask(TimeSpan updateTime)
         {
             while (!_updateMqttCancellationTokenSource.Token.IsCancellationRequested)
@@ -92,7 +105,7 @@ namespace Schweigm_NETCore_Helpers.Controller
 
                 if(SignalsToUpdate.Count == 0) continue;
 
-                lock (CaSignalsToUpdateLock)
+                lock (SignalsToUpdateLock)
                 {
 
                     foreach (var signal in SignalsToUpdate)
@@ -111,10 +124,9 @@ namespace Schweigm_NETCore_Helpers.Controller
             var msg = new Dictionary<string, string>
             {
                 {"value", signalToSend.Value},
-                {"ValueUnit", signalToSend.ValueUnit},
-                {"ValueDataType", signalToSend.ValueDataType},
-                {"Topic", signalToSend.Topic},
-                {"Timestamp", signalToSend.Timestamp}
+                {"valueUnit", signalToSend.ValueUnit},
+                {"valueDataType", signalToSend.ValueDataType},
+                {"timestamp", signalToSend.Timestamp}
             };
 
             var content = new FormUrlEncodedContent(msg);
@@ -133,6 +145,5 @@ namespace Schweigm_NETCore_Helpers.Controller
             });
 
         }
-
     }
 }

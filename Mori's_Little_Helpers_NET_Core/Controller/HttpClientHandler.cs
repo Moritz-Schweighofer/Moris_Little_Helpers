@@ -123,9 +123,9 @@ namespace Schweigm_NETCore_Helpers.Controller
 
             var msg = new Dictionary<string, string>
             {
+                {"item", signalToSend.Item},
                 {"value", signalToSend.Value},
                 {"valueUnit", signalToSend.ValueUnit},
-                {"valueDataType", signalToSend.ValueDataType},
                 {"timestamp", signalToSend.Timestamp}
             };
 
